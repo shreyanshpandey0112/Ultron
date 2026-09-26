@@ -6,12 +6,9 @@ The application is built on top of a custom Flask backend framework wrapped insi
 
 ---
 
-## 📺 Project Walkthrough & Video Demonstration
-> 💡 **For Recruiters & Evaluators:** Because API keys are kept strictly confidential and omitted from version control for security compliance, you can see a full live overview of Ultron executing system directives in this demonstration video.
 
-[![Ultron Live Demo](https://shields.io▶-Watch%20Live%20Demo%20Video-red?style=for-the-badge&logo=youtube)](YOUR_YOUTUBE_OR_LOOM_VIDEO_LINK_HERE)
 
-### Key Features Demonstrated in the Video:
+### Key Features Of the Ultron:
 * **Cold Voice Agent Persona:** Highly customized, MENACING system-control voice character interactions.
 * **Desktop Automation Layer:** Seamless control using PyAutoGUI to launch core applications, navigate directories, and capture screenshots.
 * **Mobile Bridge Layer:** Remote Android interface controls executing shell directives directly over active USB debug hooks.
