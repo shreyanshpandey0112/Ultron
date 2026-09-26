@@ -1,0 +1,749 @@
+<!--
+  ULTRON control console
+  Save this file as templates/index.html in the same folder as app.py.
+  Flask's render_template("index.html") will pick it up automatically —
+  no other changes to app.py are needed.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ULTRON Control Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:            #120c0d;
+    --bg-2:          #170f11;
+    --panel:         #1c1417;
+    --panel-2:       #201619;
+    --border:        #3a262b;
+    --border-soft:   #2a1c20;
+    --text-primary:  #f2e9ea;
+    --text-secondary:#a8949b;
+    --text-tertiary: #6f5c62;
+    --red:           #e23b4d;
+    --red-dim:       #7a1f2a;
+    --red-glow:      rgba(226,59,77,.35);
+    --steel:         #5c8d99;
+    --steel-glow:    rgba(92,141,153,.35);
+    --amber:         #d98f3b;
+    --success:       #4fae6b;
+    --font-display:  "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+    --font-body:     "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono:     "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(226,59,77,.08), transparent 60%),
+      var(--bg);
+    color:var(--text-primary);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  button, input{ font-family:inherit; color:inherit; }
+  button{ cursor:pointer; }
+  button:disabled{ cursor:not-allowed; opacity:.5; }
+
+  :focus-visible{
+    outline:2px solid var(--red);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
+  .app{
+    min-height:100%;
+    opacity:0;
+    animation: app-in .7s ease forwards;
+  }
+  @keyframes app-in{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:20px 24px;
+    border-bottom:1px solid var(--border-soft);
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; flex-direction:column; gap:2px; }
+  .brand-mark{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:clamp(24px,3.6vw,32px);
+    letter-spacing:.05em;
+    line-height:1;
+    color:var(--text-primary);
+  }
+  .brand-mark span{ color:var(--red); }
+  .brand-tag{
+    font-size:13px;
+    color:var(--text-tertiary);
+  }
+  .top-meta{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-family:var(--font-mono);
+    font-size:12px;
+  }
+  .uptime{ color:var(--text-tertiary); }
+  .status-pill{
+    display:flex; align-items:center; gap:7px;
+    padding:6px 12px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--success);
+    letter-spacing:.03em;
+  }
+  .status-pill .dot{ width:7px; height:7px; border-radius:50%; background:var(--success); box-shadow:0 0 6px var(--success); }
+  .status-pill.offline{ color:var(--amber); }
+  .status-pill.offline .dot{ background:var(--amber); box-shadow:0 0 6px var(--amber); }
+
+  /* ---------- grid ---------- */
+  .console-grid{
+    display:grid;
+    grid-template-columns:1.15fr 1fr;
+    gap:20px;
+    max-width:1180px;
+    margin:0 auto;
+    padding:24px 24px 40px;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .console-grid{ grid-template-columns:1fr; padding:18px 16px 32px; }
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+  }
+  .control-col{ display:flex; flex-direction:column; gap:16px; }
+
+  /* ---------- core stage ---------- */
+  .core-stage{
+    border-radius:18px;
+    padding:38px 22px 30px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:16px;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(226,59,77,.06), transparent 55%),
+      var(--panel);
+  }
+
+  .core-orb{
+    position:relative;
+    width:128px; height:128px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #3a1015, #150a0b 72%);
+    box-shadow:0 0 0 1px var(--border), 0 0 34px 2px var(--red-glow);
+    animation:core-pulse 3.6s ease-in-out infinite;
+  }
+  .core-orb::before{
+    content:"";
+    position:absolute; inset:-13px;
+    border-radius:50%;
+    border:1px solid rgba(226,59,77,.35);
+  }
+  .core-orb::after{
+    content:"";
+    position:absolute; inset:24%;
+    border-radius:50%;
+    background:radial-gradient(circle at 40% 35%, rgba(255,140,150,.95), rgba(226,59,77,.12) 62%, transparent 76%);
+    filter:blur(1px);
+  }
+  @keyframes core-pulse{
+    0%,100%{ transform:scale(1);   box-shadow:0 0 0 1px var(--border), 0 0 30px 2px var(--red-glow); }
+    50%{     transform:scale(1.045); box-shadow:0 0 0 1px var(--border), 0 0 52px 10px var(--red-glow); }
+  }
+  @keyframes ring-spin{ from{ transform:rotate(0); } to{ transform:rotate(360deg); } }
+
+  .core-orb.state-listening{ animation-duration:1.05s; }
+  .core-orb.state-listening::before{ border-color:rgba(255,140,150,.75); }
+
+  .core-orb.state-processing::before{
+    border-color:rgba(92,141,153,.55);
+    border-top-color:rgba(160,210,220,.95);
+    animation:ring-spin 1.3s linear infinite;
+  }
+
+  .core-orb.state-speaking{ animation-duration:.85s; }
+
+  .core-orb.offline{
+    animation-play-state:paused;
+    filter:grayscale(.85) brightness(.55);
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .core-orb, .core-orb::before{ animation:none !important; }
+  }
+
+  .core-status{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.09em;
+    color:var(--text-tertiary);
+    text-transform:uppercase;
+  }
+  .core-reply{
+    max-width:44ch;
+    font-size:16.5px;
+    line-height:1.5;
+    color:var(--text-primary);
+    min-height:1.5em;
+  }
+
+  /* ---------- directive form ---------- */
+  .directive-form{
+    display:flex;
+    gap:8px;
+    padding:14px;
+  }
+  .directive-input{
+    flex:1;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:0 14px;
+    height:44px;
+    font-size:14.5px;
+  }
+  .directive-input::placeholder{ color:var(--text-tertiary); }
+
+  .icon-btn{
+    flex-shrink:0;
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+    border:1px solid var(--border);
+    border-radius:8px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .icon-btn svg{ width:18px; height:18px; stroke:var(--text-secondary); }
+  .icon-btn:hover:not(:disabled){ border-color:var(--steel); }
+  .icon-btn:hover:not(:disabled) svg{ stroke:var(--text-primary); }
+
+  .icon-btn.mic.active{
+    background:var(--red-dim);
+    border-color:var(--red);
+    box-shadow:0 0 14px var(--red-glow);
+  }
+  .icon-btn.mic.active svg{ stroke:#fff; }
+
+  .icon-btn.send{ background:var(--red); border-color:var(--red); }
+  .icon-btn.send svg{ stroke:var(--bg); }
+  .icon-btn.send:hover:not(:disabled){ filter:brightness(1.08); border-color:var(--red); }
+
+  /* ---------- quick actions ---------- */
+  .quick-actions{
+    display:flex; flex-wrap:wrap; gap:8px;
+    padding:0 14px 6px;
+  }
+  .chip{
+    padding:7px 14px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:transparent;
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.02em;
+    color:var(--text-secondary);
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .chip:hover:not(:disabled){ border-color:var(--steel); color:var(--text-primary); }
+
+  .hint{
+    padding:0 14px 14px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-tertiary);
+  }
+
+  /* ---------- device strip ---------- */
+  .device-strip{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    flex-wrap:wrap;
+  }
+  .device-items{ display:flex; gap:20px; flex-wrap:wrap; }
+  .device-item{
+    display:flex; align-items:center; gap:8px;
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:.03em;
+    color:var(--text-secondary);
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; background:var(--text-tertiary); flex-shrink:0; }
+  .dot.ok{   background:var(--success); box-shadow:0 0 6px var(--success); }
+  .dot.warn{ background:var(--amber);   box-shadow:0 0 6px var(--amber); }
+  .dot.idle{ background:var(--steel); }
+
+  .text-btn{
+    background:transparent;
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:6px 10px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.05em;
+    color:var(--text-tertiary);
+  }
+  .text-btn:hover:not(:disabled){ border-color:var(--steel); color:var(--text-primary); }
+
+  /* ---------- log column ---------- */
+  .log-col{
+    display:flex;
+    flex-direction:column;
+    border-radius:12px;
+    min-height:460px;
+    max-height:calc(100vh - 220px);
+  }
+  @media (max-width:900px){
+    .log-col{ max-height:400px; min-height:320px; }
+  }
+  .log-header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:13px 16px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .log-title{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    letter-spacing:.12em;
+    color:var(--text-tertiary);
+    text-transform:uppercase;
+  }
+  .log-feed{
+    flex:1;
+    overflow-y:auto;
+    padding:12px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:7px;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    scrollbar-width:thin;
+    scrollbar-color:var(--border) transparent;
+  }
+  .log-feed::-webkit-scrollbar{ width:7px; }
+  .log-feed::-webkit-scrollbar-thumb{ background:var(--border); border-radius:4px; }
+
+  .log-line{ display:flex; gap:9px; flex-wrap:wrap; line-height:1.5; }
+  .log-time{ color:var(--text-tertiary); flex-shrink:0; }
+  .log-role{ flex-shrink:0; min-width:50px; font-weight:600; }
+  .log-user  .log-role{ color:var(--text-secondary); }
+  .log-exec  .log-role{ color:var(--steel); }
+  .log-ultron .log-role{ color:var(--red); }
+  .log-msg{ color:var(--text-primary); word-break:break-word; }
+  .log-empty{ color:var(--text-tertiary); font-style:italic; }
+
+  footer.reminder{
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 24px 28px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--text-tertiary);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">ULTRON<span>.</span></div>
+      <div class="brand-tag">System-control intelligence for this PC and any linked Android device.</div>
+    </div>
+    <div class="top-meta">
+      <span class="uptime" id="uptime">UPTIME 00:00:00</span>
+      <span class="status-pill" id="statusPill"><span class="dot"></span>SYSTEM ONLINE</span>
+    </div>
+  </header>
+
+  <main class="console-grid">
+
+    <section class="control-col">
+
+      <div class="core-stage panel">
+        <div class="core-orb state-idle" id="coreOrb" aria-hidden="true"></div>
+        <p class="core-status" id="coreStatus">SYSTEM ONLINE</p>
+        <p class="core-reply" id="coreReply" aria-live="polite">Awaiting directive.</p>
+      </div>
+
+      <form class="directive-form panel" id="directiveForm">
+        <label for="directiveInput" class="sr-only">Directive</label>
+        <input
+          type="text"
+          id="directiveInput"
+          class="directive-input"
+          placeholder="State your directive…"
+          autocomplete="off"
+        >
+        <button type="button" class="icon-btn mic" id="micBtn" aria-label="Voice input" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="2.5" width="6" height="11" rx="3"></rect>
+            <path d="M5 11a7 7 0 0 0 14 0"></path>
+            <line x1="12" y1="18" x2="12" y2="21.5"></line>
+            <line x1="8.5" y1="21.5" x2="15.5" y2="21.5"></line>
+          </svg>
+        </button>
+        <button type="submit" class="icon-btn send" id="sendBtn" aria-label="Transmit directive">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 11.5 20.5 4 13 21.5 10.5 13.5 3 11.5Z"></path>
+          </svg>
+        </button>
+      </form>
+
+      <div>
+        <div class="quick-actions panel" style="border-bottom:none; border-radius:10px 10px 0 0;">
+          <button type="button" class="chip" data-directive="take a screenshot">Screenshot</button>
+          <button type="button" class="chip" data-directive="device status">Device Status</button>
+          <button type="button" class="chip" data-directive="open chrome">Open Chrome</button>
+          <button type="button" class="chip" data-directive="open notepad">Open Notepad</button>
+          <button type="button" class="chip" data-directive="open file explorer">Open Explorer</button>
+        </div>
+        <p class="hint panel" style="border-top:none; border-radius:0 0 10px 10px; margin:0;">
+          Quick commands execute directly, without AI reasoning. Free-form directives are routed through Gemini.
+        </p>
+      </div>
+
+      <div class="device-strip panel">
+        <div class="device-items">
+          <span class="device-item"><span class="dot" id="pcDot"></span><span id="pcLabel">PC —</span></span>
+          <span class="device-item"><span class="dot" id="mobileDot"></span><span id="mobileLabel">MOBILE —</span></span>
+        </div>
+        <button type="button" class="text-btn" id="rescanBtn">RESCAN</button>
+      </div>
+
+    </section>
+
+    <section class="log-col panel">
+      <div class="log-header">
+        <span class="log-title">Telemetry</span>
+        <button type="button" class="text-btn" id="clearLogBtn">CLEAR</button>
+      </div>
+      <div class="log-feed" id="logFeed" role="log" aria-label="Telemetry log">
+        <div class="log-line log-empty" id="logEmpty">No activity yet.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="reminder">
+    Voice input and spoken replies require Chrome's Web Speech API.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- element refs ----------
+  const coreOrb       = document.getElementById('coreOrb');
+  const coreStatusEl  = document.getElementById('coreStatus');
+  const coreReplyEl   = document.getElementById('coreReply');
+  const statusPill    = document.getElementById('statusPill');
+  const uptimeEl      = document.getElementById('uptime');
+
+  const directiveForm  = document.getElementById('directiveForm');
+  const directiveInput = document.getElementById('directiveInput');
+  const micBtn         = document.getElementById('micBtn');
+  const sendBtn         = document.getElementById('sendBtn');
+
+  const pcDot      = document.getElementById('pcDot');
+  const pcLabel    = document.getElementById('pcLabel');
+  const mobileDot  = document.getElementById('mobileDot');
+  const mobileLabel = document.getElementById('mobileLabel');
+  const rescanBtn  = document.getElementById('rescanBtn');
+
+  const logFeed    = document.getElementById('logFeed');
+  const logEmpty   = document.getElementById('logEmpty');
+  const clearLogBtn = document.getElementById('clearLogBtn');
+
+  // ---------- core state ----------
+  const STATE_LABELS = {
+    idle:       'SYSTEM ONLINE',
+    listening:  'LISTENING',
+    processing: 'PROCESSING DIRECTIVE',
+    speaking:   'TRANSMITTING RESPONSE',
+  };
+  let currentState = 'idle';
+  let connected = true;
+
+  function setCoreState(state){
+    currentState = state;
+    coreOrb.className = 'core-orb state-' + state + (connected ? '' : ' offline');
+    coreStatusEl.textContent = connected ? (STATE_LABELS[state] || state.toUpperCase()) : 'LINK SEVERED';
+  }
+
+  function setConnection(isConnected){
+    connected = isConnected;
+    statusPill.classList.toggle('offline', !isConnected);
+    statusPill.innerHTML = '<span class="dot"></span>' + (isConnected ? 'SYSTEM ONLINE' : 'LINK SEVERED');
+    setCoreState(currentState === 'idle' || !isConnected ? 'idle' : currentState);
+  }
+
+  // ---------- uptime clock ----------
+  const bootTime = Date.now();
+  function pad(n){ return String(n).padStart(2,'0'); }
+  setInterval(function(){
+    const s = Math.floor((Date.now() - bootTime) / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    uptimeEl.textContent = 'UPTIME ' + pad(h) + ':' + pad(m) + ':' + pad(sec);
+  }, 1000);
+
+  // ---------- log feed ----------
+  function nowStamp(){
+    return new Date().toTimeString().slice(0,8);
+  }
+
+  function appendLog(role, text){
+    if(logEmpty && logEmpty.parentNode){ logEmpty.remove(); }
+    const line = document.createElement('div');
+    line.className = 'log-line log-' + role.toLowerCase();
+
+    const time = document.createElement('span');
+    time.className = 'log-time';
+    time.textContent = nowStamp();
+
+    const roleEl = document.createElement('span');
+    roleEl.className = 'log-role';
+    roleEl.textContent = role;
+
+    const msgEl = document.createElement('span');
+    msgEl.className = 'log-msg';
+    msgEl.textContent = text;
+
+    line.append(time, roleEl, msgEl);
+    logFeed.appendChild(line);
+    logFeed.scrollTop = logFeed.scrollHeight;
+  }
+
+  clearLogBtn.addEventListener('click', function(){
+    logFeed.innerHTML = '';
+    const empty = document.createElement('div');
+    empty.className = 'log-line log-empty';
+    empty.id = 'logEmpty';
+    empty.textContent = 'No activity yet.';
+    logFeed.appendChild(empty);
+  });
+
+  function formatExec(entry){
+    const status = (entry.result && entry.result.status) || 'unknown';
+    const msg = (entry.result && entry.result.message) || '';
+    const args = entry.args && Object.keys(entry.args).length ? ' ' + JSON.stringify(entry.args) : '';
+    return entry.tool + args + ' \u2192 ' + status + (msg ? ': ' + msg : '');
+  }
+
+  // ---------- speech synthesis ----------
+  let ttsEnabled = true;
+  function speak(text){
+    if(!ttsEnabled || !('speechSynthesis' in window)) { setCoreState('idle'); return; }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 0.75;
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => /david|daniel|male|alex/i.test(v.name)) || voices[0];
+    if(preferred) utter.voice = preferred;
+    utter.onstart = function(){ setCoreState('speaking'); };
+    utter.onend = function(){ setCoreState('idle'); };
+    utter.onerror = function(){ setCoreState('idle'); };
+    window.speechSynthesis.speak(utter);
+  }
+
+  // ---------- speech recognition ----------
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let recognizing = false;
+
+  if(SpeechRecognition){
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = function(e){
+      const transcript = e.results[0][0].transcript;
+      directiveInput.value = transcript;
+      stopListening();
+      submitDirective(transcript);
+    };
+    recognition.onerror = function(){ stopListening(); };
+    recognition.onend = function(){ stopListening(); };
+  } else {
+    micBtn.disabled = true;
+    micBtn.title = "Voice input requires Chrome's Web Speech API";
+  }
+
+  function startListening(){
+    if(!recognition || recognizing) return;
+    recognizing = true;
+    micBtn.classList.add('active');
+    micBtn.setAttribute('aria-pressed', 'true');
+    setCoreState('listening');
+    try{ recognition.start(); }catch(e){ /* already started */ }
+  }
+  function stopListening(){
+    recognizing = false;
+    micBtn.classList.remove('active');
+    micBtn.setAttribute('aria-pressed', 'false');
+    if(currentState === 'listening') setCoreState('idle');
+    if(recognition){ try{ recognition.stop(); }catch(e){} }
+  }
+  micBtn.addEventListener('click', function(){
+    if(recognizing) stopListening(); else startListening();
+  });
+
+  // ---------- conversational directive (AI-routed) ----------
+  async function submitDirective(rawText){
+    const text = (rawText || '').trim();
+    if(!text) return;
+
+    appendLog('USER', text);
+    directiveInput.value = '';
+    directiveInput.disabled = true;
+    sendBtn.disabled = true;
+    setCoreState('processing');
+
+    try{
+      const res = await fetch('/api/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text }),
+      });
+      if(!res.ok) throw new Error('bad status ' + res.status);
+      const data = await res.json();
+
+      (data.log || []).filter(e => e.role === 'EXEC').forEach(function(entry){
+        appendLog('EXEC', formatExec(entry));
+      });
+
+      const reply = data.reply || 'Directive complete.';
+      coreReplyEl.textContent = reply;
+      appendLog('ULTRON', reply);
+      setConnection(true);
+      speak(reply);
+    }catch(err){
+      const failMsg = 'Link to host severed. Confirm app.py is running on port 5000.';
+      coreReplyEl.textContent = failMsg;
+      appendLog('ULTRON', failMsg);
+      setConnection(false);
+      setCoreState('idle');
+    }finally{
+      directiveInput.disabled = false;
+      sendBtn.disabled = false;
+      directiveInput.focus();
+      if(currentState === 'processing') setCoreState('idle');
+    }
+  }
+
+  directiveForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    submitDirective(directiveInput.value);
+  });
+
+  // ---------- quick directives (direct-match endpoint) ----------
+  async function sendQuickDirective(directive){
+    appendLog('USER', directive);
+    setCoreState('processing');
+    try{
+      const res = await fetch('/send_directive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ directive: directive }),
+      });
+      if(!res.ok) throw new Error('bad status ' + res.status);
+      const data = await res.json();
+      setConnection(true);
+
+      if(data.mobile_devices !== undefined){
+        updateDeviceStrip(data);
+        appendLog('EXEC', 'device scan \u2192 ' + data.status + ', ' + data.mobile_device_count + ' mobile device(s)');
+        coreReplyEl.textContent = data.mobile_device_count + ' mobile device(s) detected. PC ' + data.pc_status + '.';
+      } else {
+        const status = data.status || 'unknown';
+        const msg = data.message || (status === 'ok' ? 'Directive complete.' : 'Directive not recognized.');
+        appendLog('EXEC', directive + ' \u2192 ' + status + (msg ? ': ' + msg : ''));
+        coreReplyEl.textContent = msg;
+      }
+      setCoreState('idle');
+    }catch(err){
+      setConnection(false);
+      coreReplyEl.textContent = 'Link to host severed. Confirm app.py is running on port 5000.';
+      setCoreState('idle');
+    }
+  }
+
+  document.querySelectorAll('.chip').forEach(function(btn){
+    btn.addEventListener('click', function(){ sendQuickDirective(btn.dataset.directive); });
+  });
+
+  // ---------- device strip ----------
+  function updateDeviceStrip(data){
+    pcDot.className = 'dot ' + (data.pc_status === 'online' ? 'ok' : 'warn');
+    pcLabel.textContent = 'PC ' + (data.pc_status || 'unknown').toUpperCase();
+
+    const hasMobile = data.mobile_device_count > 0;
+    mobileDot.className = 'dot ' + (hasMobile ? 'ok' : (data.adb_server_reachable ? 'idle' : 'warn'));
+    mobileLabel.textContent = hasMobile
+      ? data.mobile_device_count + ' MOBILE DEVICE' + (data.mobile_device_count > 1 ? 'S' : '')
+      : (data.adb_server_reachable ? 'NO MOBILE DEVICE' : 'ADB BRIDGE OFFLINE');
+  }
+
+  async function scanDevices(logIt){
+    try{
+      const res = await fetch('/send_directive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ directive: 'device status' }),
+      });
+      if(!res.ok) throw new Error('bad status ' + res.status);
+      const data = await res.json();
+      setConnection(true);
+      updateDeviceStrip(data);
+      if(logIt) appendLog('EXEC', 'device scan \u2192 ' + data.status + ', ' + data.mobile_device_count + ' mobile device(s)');
+    }catch(err){
+      setConnection(false);
+      pcDot.className = 'dot warn';
+      pcLabel.textContent = 'PC UNKNOWN';
+      mobileDot.className = 'dot warn';
+      mobileLabel.textContent = 'LINK SEVERED';
+    }
+  }
+
+  rescanBtn.addEventListener('click', function(){ scanDevices(true); });
+
+  // ---------- boot sequence ----------
+  setTimeout(function(){ appendLog('EXEC', 'boot sequence initiated'); }, 250);
+  setTimeout(function(){
+    appendLog('EXEC', 'core online. awaiting directive.');
+    scanDevices(false);
+  }, 650);
+
+})();
+</script>
+</body>
+</html>

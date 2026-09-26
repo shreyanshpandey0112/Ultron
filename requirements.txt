@@ -1,0 +1,6 @@
+flask
+google-genai
+pyautogui
+pure-python-adb
+python-dotenv
+waitress
